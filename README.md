@@ -18,6 +18,16 @@ chmod +x install-debian.sh
 ./install-debian.sh
 ```
 
+The default Vim package is `vim-gtk3`, because Debian's plain `vim` package
+may not include `+clipboard`. That lets normal yanks use the system clipboard
+through `set clipboard=unnamedplus`.
+
+For a smaller terminal-only install, override the package:
+
+```sh
+VIM_PACKAGE=vim ./install-debian.sh
+```
+
 To install or upgrade Neovim and link the Neovim config:
 
 ```sh

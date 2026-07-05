@@ -10,10 +10,14 @@ With --nvim, install or upgrade Neovim and link ~/.config/nvim/init.lua.
 
 If the other editor already exists on the system, its config link is refreshed
 too. Existing real config files are backed up before links are created.
+
+The default Vim package is vim-gtk3 so Vim has +clipboard support on Debian.
+Override it with VIM_PACKAGE=vim for a smaller terminal-only install.
 EOF
 }
 
 mode="vim"
+vim_package="${VIM_PACKAGE:-vim-gtk3}"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -129,7 +133,7 @@ if [ "$mode" = "nvim" ]; then
     link_vim
   fi
 else
-  apt_install_or_upgrade vim
+  apt_install_or_upgrade "$vim_package"
   link_vim
   if command -v nvim >/dev/null 2>&1; then
     link_nvim
