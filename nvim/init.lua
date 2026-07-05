@@ -2,7 +2,8 @@
 vim.opt.number = true                 -- 显示绝对行号
 vim.opt.relativenumber = true         -- 显示相对行号，方便 5j / 3k 跳转
 vim.opt.cursorline = true             -- 高亮当前行
-vim.opt.termguicolors = true          -- 启用真彩色
+vim.opt.showcmd = true                -- 显示未完成的命令
+vim.opt.termguicolors = false         -- 禁用真彩色，使用终端基础配色
 vim.opt.signcolumn = "yes"            -- 左侧诊断/标记列固定显示，避免界面抖动
 
 -- 缩进
@@ -30,6 +31,8 @@ vim.opt.splitbelow = true             -- 水平分屏默认开在下面
 -- 基础语法高亮和文件类型识别
 vim.cmd("syntax enable")
 vim.cmd("filetype plugin indent on")
+vim.opt.background = "dark"
+vim.cmd("colorscheme desert")
 
 -- Leader 键，常用设为空格
 vim.g.mapleader = " "

@@ -2,8 +2,9 @@
 set number
 set relativenumber
 set cursorline
+set showcmd
 if has('termguicolors')
-  set termguicolors
+  set notermguicolors
 endif
 if exists('&signcolumn')
   set signcolumn=yes
@@ -38,6 +39,8 @@ set splitbelow
 " Syntax highlighting and filetype plugins
 syntax enable
 filetype plugin indent on
+set background=dark
+colorscheme desert
 
 " Leader key
 let mapleader = " "
