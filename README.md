@@ -10,6 +10,29 @@ Personal Vim and Neovim configuration.
 
 ## Debian setup
 
+One-line install without cloning:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/AmbitiousG/dotfiles/main/install-debian.sh | bash
+```
+
+Or with `wget`:
+
+```sh
+wget -qO- https://raw.githubusercontent.com/AmbitiousG/dotfiles/main/install-debian.sh | bash
+```
+
+For Neovim without cloning:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/AmbitiousG/dotfiles/main/install-debian.sh | bash -s -- --nvim
+```
+
+The no-clone path stores the downloaded files in `~/.dotfiles`. Override that
+with `DOTFILES_DIR=/path/to/dotfiles`.
+
+## Clone setup
+
 Clone this repository on a new Debian machine, then run:
 
 ```sh

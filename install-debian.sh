@@ -10,10 +10,14 @@ With --nvim, install or upgrade Neovim and link ~/.config/nvim/init.lua.
 
 If the other editor already exists on the system, its config link is refreshed
 too. Existing real config files are backed up before links are created.
+
+When this script is run without a cloned repository, it downloads the dotfiles
+to DOTFILES_DIR, defaulting to ~/.dotfiles.
 EOF
 }
 
 mode="vim"
+raw_base="${DOTFILES_RAW_BASE:-https://raw.githubusercontent.com/AmbitiousG/dotfiles/main}"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -48,7 +52,53 @@ else
   sudo_cmd=(sudo)
 fi
 
-repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+script_path="${BASH_SOURCE[0]:-$0}"
+script_dir=""
+if [ -n "$script_path" ] && [ -f "$script_path" ]; then
+  script_dir="$(cd "$(dirname "$script_path")" && pwd -P)"
+fi
+
+download_file() {
+  local url="$1"
+  local destination="$2"
+  local destination_dir
+  local tmp
+
+  destination_dir="$(dirname "$destination")"
+  mkdir -p "$destination_dir"
+  tmp="$(mktemp)"
+
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$url" -o "$tmp"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO "$tmp" "$url"
+  else
+    rm -f "$tmp"
+    echo "curl or wget is required to download dotfiles without cloning." >&2
+    exit 1
+  fi
+
+  mv "$tmp" "$destination"
+}
+
+bootstrap_dotfiles() {
+  local destination="$1"
+
+  echo "Downloading dotfiles to $destination..."
+  download_file "$raw_base/.vimrc" "$destination/.vimrc"
+  download_file "$raw_base/nvim/init.lua" "$destination/nvim/init.lua"
+  download_file "$raw_base/install-debian.sh" "$destination/install-debian.sh"
+  download_file "$raw_base/README.md" "$destination/README.md"
+  chmod +x "$destination/install-debian.sh"
+}
+
+if [ -n "$script_dir" ] && [ -f "$script_dir/.vimrc" ] && [ -f "$script_dir/nvim/init.lua" ]; then
+  repo_dir="$script_dir"
+else
+  repo_dir="${DOTFILES_DIR:-$HOME/.dotfiles}"
+  bootstrap_dotfiles "$repo_dir"
+fi
+
 vimrc_source="$repo_dir/.vimrc"
 nvim_source="$repo_dir/nvim/init.lua"
 
