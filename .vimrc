@@ -48,10 +48,10 @@ silent! colorscheme slate
 let mapleader = " "
 
 " Keymaps
-nnoremap <silent> <Space>w :w<CR>
-nnoremap <silent> <Space>q :q<CR>
-nnoremap <silent> <Space>h :nohlsearch<CR>
-nnoremap <silent> <Space>e :Ex<CR>
+nnoremap <Space>w :w<CR>
+nnoremap <Space>q :q<CR>
+nnoremap <Space>h :nohlsearch<CR>
+nnoremap <Space>e :Ex<CR>
 
 nnoremap <silent> <C-h> <C-w>h
 nnoremap <silent> <C-j> <C-w>j

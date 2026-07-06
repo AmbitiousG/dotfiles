@@ -42,16 +42,17 @@ vim.g.mapleader = " "
 -- 快捷键
 local keymap = vim.keymap.set
 local opts = { noremap = true, silent = true }
+local visible_opts = { noremap = true, silent = false }
 
 -- 保存 / 退出
-keymap("n", "<Space>w", ":w<CR>", opts)
-keymap("n", "<Space>q", ":q<CR>", opts)
+keymap("n", "<Space>w", ":w<CR>", visible_opts)
+keymap("n", "<Space>q", ":q<CR>", visible_opts)
 
 -- 清除搜索高亮
-keymap("n", "<Space>h", ":nohlsearch<CR>", opts)
+keymap("n", "<Space>h", ":nohlsearch<CR>", visible_opts)
 
 -- 打开文件浏览器 netrw
-keymap("n", "<Space>e", ":Ex<CR>", opts)
+keymap("n", "<Space>e", ":Ex<CR>", visible_opts)
 
 -- 窗口切换
 keymap("n", "<C-h>", "<C-w>h", opts)
