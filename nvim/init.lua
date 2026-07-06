@@ -1,6 +1,8 @@
 -- 基础显示
 vim.opt.number = true                 -- 显示绝对行号
 vim.opt.relativenumber = true         -- 显示相对行号，方便 5j / 3k 跳转
+vim.opt.numberwidth = 4               -- 固定最小行号列宽
+vim.opt.foldcolumn = "0"              -- 不额外显示折叠列
 vim.opt.cursorline = true             -- 高亮当前行
 vim.opt.showcmd = true                -- 显示未完成的命令
 vim.opt.termguicolors = false         -- 禁用真彩色，使用终端基础配色
@@ -32,7 +34,7 @@ vim.opt.splitbelow = true             -- 水平分屏默认开在下面
 vim.cmd("syntax enable")
 vim.cmd("filetype plugin indent on")
 vim.opt.background = "dark"
-vim.cmd("colorscheme slate")
+pcall(vim.cmd, "colorscheme slate")
 
 -- Leader 键，常用设为空格
 vim.g.mapleader = " "
@@ -42,14 +44,14 @@ local keymap = vim.keymap.set
 local opts = { noremap = true, silent = true }
 
 -- 保存 / 退出
-keymap("n", "<leader>w", ":w<CR>", opts)
-keymap("n", "<leader>q", ":q<CR>", opts)
+keymap("n", "<Space>w", ":w<CR>", opts)
+keymap("n", "<Space>q", ":q<CR>", opts)
 
 -- 清除搜索高亮
-keymap("n", "<leader>h", ":nohlsearch<CR>", opts)
+keymap("n", "<Space>h", ":nohlsearch<CR>", opts)
 
 -- 打开文件浏览器 netrw
-keymap("n", "<leader>e", ":Ex<CR>", opts)
+keymap("n", "<Space>e", ":Ex<CR>", opts)
 
 -- 窗口切换
 keymap("n", "<C-h>", "<C-w>h", opts)

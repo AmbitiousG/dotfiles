@@ -1,6 +1,8 @@
 " Basic display
 set number
 set relativenumber
+set numberwidth=4
+set foldcolumn=0
 set cursorline
 set showcmd
 if has('termguicolors')
@@ -40,16 +42,16 @@ set splitbelow
 syntax enable
 filetype plugin indent on
 set background=dark
-colorscheme slate
+silent! colorscheme slate
 
 " Leader key
 let mapleader = " "
 
 " Keymaps
-nnoremap <silent> <leader>w :w<CR>
-nnoremap <silent> <leader>q :q<CR>
-nnoremap <silent> <leader>h :nohlsearch<CR>
-nnoremap <silent> <leader>e :Ex<CR>
+nnoremap <silent> <Space>w :w<CR>
+nnoremap <silent> <Space>q :q<CR>
+nnoremap <silent> <Space>h :nohlsearch<CR>
+nnoremap <silent> <Space>e :Ex<CR>
 
 nnoremap <silent> <C-h> <C-w>h
 nnoremap <silent> <C-j> <C-w>j

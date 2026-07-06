@@ -244,45 +244,56 @@ ensure_bashrc_block() {
   cat > "$block_tmp" <<EOF
 
 $bashrc_block_start
-# sudoedit: safer, uses current user's vim config and falls back when sudoedit
-# refuses files in writable directories.
-se() {
-    local stderr_file
-    local status
-    local editor_wrapper
+# Use normal Vim for writable files; use sudo Vim for files that need root.
+_dotfiles_sudo_vim() {
     local vimrc_path
 
     vimrc_path="\${DOTFILES_VIMRC:-\$HOME/.vimrc}"
-    stderr_file=\$(mktemp)
-    editor_wrapper=\$(mktemp)
-    printf '#!/usr/bin/env bash\nexec vim -u %q "\$@"\n' "\$vimrc_path" > "\$editor_wrapper"
-    chmod +x "\$editor_wrapper"
+    sudo vim \\
+        --cmd "set runtimepath^=\$HOME/.vim" \\
+        --cmd "set runtimepath+=\$HOME/.vim/after" \\
+        -u "\$vimrc_path" \\
+        "\$@"
+}
 
-    if SUDO_EDITOR="\$editor_wrapper" sudoedit "\$@" 2>"\$stderr_file"; then
-        rm -f "\$stderr_file" "\$editor_wrapper"
-        return 0
-    fi
-    status=\$?
-    rm -f "\$editor_wrapper"
+se() {
+    local needs_sudo=0
+    local target
+    local target_dir
 
-    if grep -Fq 'editing files in a writable directory is not permitted' "\$stderr_file"; then
-        rm -f "\$stderr_file"
-        echo 'Falling back to sudo vim -u ~/.vimrc for writable-directory path.' >&2
-        sudo vim -u "\$vimrc_path" "\$@"
+    if [ "\$#" -eq 0 ]; then
+        vim
         return \$?
     fi
 
-    cat "\$stderr_file" >&2
-    rm -f "\$stderr_file"
-    return "\$status"
+    for target in "\$@"; do
+        case "\$target" in
+            -*) continue ;;
+        esac
+
+        if [ -e "\$target" ] || [ -L "\$target" ]; then
+            if [ ! -w "\$target" ]; then
+                needs_sudo=1
+                break
+            fi
+        else
+            target_dir=\$(dirname -- "\$target")
+            if [ ! -d "\$target_dir" ] || [ ! -w "\$target_dir" ]; then
+                needs_sudo=1
+                break
+            fi
+        fi
+    done
+
+    if [ "\$needs_sudo" -eq 1 ]; then
+        _dotfiles_sudo_vim "\$@"
+    else
+        vim "\$@"
+    fi
 }
 
-# sudo vim: useful when sudoedit refuses writable directories.
 svim() {
-    local vimrc_path
-
-    vimrc_path="\${DOTFILES_VIMRC:-\$HOME/.vimrc}"
-    sudo vim -u "\$vimrc_path" "\$@"
+    _dotfiles_sudo_vim "\$@"
 }
 $bashrc_block_end
 EOF
@@ -340,5 +351,5 @@ fi
 
 echo "Done."
 if [ "$bashrc_updated" -eq 1 ]; then
-  echo "Run 'source ~/.bashrc' or open a new shell to pick up EDITOR, VISUAL, and svim."
+  echo "Run 'source ~/.bashrc' or open a new shell to pick up EDITOR, VISUAL, se, and svim."
 fi
