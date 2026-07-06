@@ -1,3 +1,10 @@
+" Vim startup and key sequence behavior
+set nocompatible
+set timeout
+set timeoutlen=1000
+set ttimeout
+set ttimeoutlen=50
+
 " Basic display
 set number
 set relativenumber

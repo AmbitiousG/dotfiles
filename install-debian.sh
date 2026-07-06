@@ -244,22 +244,112 @@ ensure_bashrc_block() {
   cat > "$block_tmp" <<EOF
 
 $bashrc_block_start
-# Use normal Vim for writable files; use sudo Vim for files that need root.
-_dotfiles_sudo_vim() {
-    local vimrc_path
+# Use normal Vim when possible. For protected files, edit a temporary copy as
+# the current user and install it back with sudo after Vim exits.
+_dotfiles_target_needs_sudo() {
+    local target="\$1"
+    local target_dir
 
-    vimrc_path="\${DOTFILES_VIMRC:-\$HOME/.vimrc}"
-    sudo vim \\
-        --cmd "set runtimepath^=\$HOME/.vim" \\
-        --cmd "set runtimepath+=\$HOME/.vim/after" \\
-        -u "\$vimrc_path" \\
-        "\$@"
+    case "\$target" in
+        --|-*) return 1 ;;
+    esac
+
+    target_dir=\$(dirname -- "\$target")
+    if [ -e "\$target" ] || [ -L "\$target" ]; then
+        [ ! -w "\$target" ] || [ ! -w "\$target_dir" ]
+        return \$?
+    fi
+
+    [ ! -d "\$target_dir" ] || [ ! -w "\$target_dir" ]
 }
 
-se() {
-    local needs_sudo=0
-    local target
+_dotfiles_edit_protected_one() {
+    local target="\$1"
     local target_dir
+    local base
+    local tmp
+    local before
+    local stat_out
+    local rest
+    local owner
+    local group
+    local mode
+    local vim_status
+    local install_status
+
+    if sudo test -L "\$target"; then
+        target=\$(sudo readlink -f -- "\$target") || {
+            return 1
+        }
+    fi
+
+    target_dir=\$(dirname -- "\$target")
+    base=\$(basename -- "\$target")
+    if [ -z "\$base" ] || [ "\$base" = "." ] || [ "\$base" = "/" ]; then
+        echo "se: unsupported target: \$target" >&2
+        return 2
+    fi
+
+    tmp=\$(mktemp --tmpdir "se.XXXXXX.\$base") || return 1
+    before="\$tmp.before"
+
+    if sudo test -e "\$target"; then
+        stat_out=\$(sudo stat -c '%u %g %a' -- "\$target") || {
+            rm -f "\$tmp" "\$before"
+            return 1
+        }
+        owner=\${stat_out%% *}
+        rest=\${stat_out#* }
+        group=\${rest%% *}
+        mode=\${rest##* }
+        sudo cp -- "\$target" "\$tmp" || {
+            rm -f "\$tmp" "\$before"
+            return 1
+        }
+    else
+        if ! sudo test -d "\$target_dir"; then
+            sudo mkdir -p -- "\$target_dir" || {
+                rm -f "\$tmp" "\$before"
+                return 1
+            }
+        fi
+        stat_out=\$(sudo stat -c '%u %g' -- "\$target_dir") || {
+            rm -f "\$tmp" "\$before"
+            return 1
+        }
+        owner=\${stat_out%% *}
+        group=\${stat_out##* }
+        mode=644
+        : > "\$tmp"
+    fi
+
+    chmod u+rw "\$tmp"
+    cp -- "\$tmp" "\$before"
+    vim "\$tmp"
+    vim_status=\$?
+    if [ "\$vim_status" -ne 0 ]; then
+        rm -f "\$tmp" "\$before"
+        return "\$vim_status"
+    fi
+
+    if cmp -s "\$before" "\$tmp"; then
+        echo "se: no changes: \$target"
+        rm -f "\$tmp" "\$before"
+        return 0
+    fi
+
+    sudo install -m "\$mode" -o "\$owner" -g "\$group" -- "\$tmp" "\$target"
+    install_status=\$?
+    rm -f "\$tmp" "\$before"
+    if [ "\$install_status" -eq 0 ]; then
+        echo "se: wrote: \$target"
+    fi
+    return "\$install_status"
+}
+
+_dotfiles_edit_protected() {
+    local target
+    local status=0
 
     if [ "\$#" -eq 0 ]; then
         vim
@@ -268,32 +358,45 @@ se() {
 
     for target in "\$@"; do
         case "\$target" in
-            -*) continue ;;
+            --|-*)
+                echo "se: Vim options are only supported for files writable by the current user." >&2
+                return 2
+                ;;
         esac
+    done
 
-        if [ -e "\$target" ] || [ -L "\$target" ]; then
-            if [ ! -w "\$target" ]; then
-                needs_sudo=1
-                break
-            fi
-        else
-            target_dir=\$(dirname -- "\$target")
-            if [ ! -d "\$target_dir" ] || [ ! -w "\$target_dir" ]; then
-                needs_sudo=1
-                break
-            fi
+    for target in "\$@"; do
+        _dotfiles_edit_protected_one "\$target" || status=\$?
+    done
+
+    return "\$status"
+}
+
+se() {
+    local needs_sudo=0
+    local target
+
+    if [ "\$#" -eq 0 ]; then
+        vim
+        return \$?
+    fi
+
+    for target in "\$@"; do
+        if _dotfiles_target_needs_sudo "\$target"; then
+            needs_sudo=1
+            break
         fi
     done
 
     if [ "\$needs_sudo" -eq 1 ]; then
-        _dotfiles_sudo_vim "\$@"
+        _dotfiles_edit_protected "\$@"
     else
         vim "\$@"
     fi
 }
 
 svim() {
-    _dotfiles_sudo_vim "\$@"
+    _dotfiles_edit_protected "\$@"
 }
 $bashrc_block_end
 EOF

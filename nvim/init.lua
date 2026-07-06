@@ -1,3 +1,9 @@
+-- Vim startup and key sequence behavior
+vim.opt.timeout = true
+vim.opt.timeoutlen = 1000
+vim.opt.ttimeout = true
+vim.opt.ttimeoutlen = 50
+
 -- 基础显示
 vim.opt.number = true                 -- 显示绝对行号
 vim.opt.relativenumber = true         -- 显示相对行号，方便 5j / 3k 跳转

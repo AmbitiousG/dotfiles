@@ -60,7 +60,7 @@ The script also:
   but only on Vim versions older than 9, overriding the built-in older copy so
   Vim 8 can use the newer `slate` variant too.
 - Ensures `~/.bashrc` contains `export EDITOR=vim`, `export VISUAL=vim`, a
-  `se()` helper that uses normal Vim for writable files and sudo Vim with your
-  `~/.vimrc` for root-owned files, and a `svim()` helper for direct sudo Vim
-  with the same config.
+  `se()` helper that uses normal Vim for writable files. For protected files it
+  edits a temporary copy with your normal Vim config, then writes the file back
+  with sudo after Vim exits. `svim()` forces that protected-file flow.
 - Backs up existing config files before replacing them with symlinks.
