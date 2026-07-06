@@ -195,6 +195,24 @@ ensure_slate_colorscheme() {
   download_file "$slate_url" "$slate_target"
 }
 
+vim_major_version() {
+  local version_line
+  local version_value
+
+  if ! command -v vim >/dev/null 2>&1; then
+    return 1
+  fi
+
+  version_line="$(vim --version 2>/dev/null | sed -n '1p')"
+  version_value="$(printf '%s\n' "$version_line" | sed -n 's/.*Vi IMproved \([0-9][0-9]*\)\..*/\1/p')"
+  if [ -n "$version_value" ]; then
+    printf '%s\n' "$version_value"
+    return 0
+  fi
+
+  return 1
+}
+
 append_line_if_missing() {
   local file_path="$1"
   local line="$2"
@@ -215,20 +233,28 @@ ensure_shell_defaults() {
 }
 
 vim_colorscheme="$(extract_vim_colorscheme "$vimrc_source")"
-if [ "$vim_colorscheme" = "slate" ]; then
-  ensure_slate_colorscheme
-fi
-
 ensure_shell_defaults
 
 if [ "$mode" = "nvim" ]; then
   apt_install_or_upgrade neovim
+  if [ "$vim_colorscheme" = "slate" ] && command -v vim >/dev/null 2>&1; then
+    vim_major="$(vim_major_version || true)"
+    if [ -n "$vim_major" ] && [ "$vim_major" -lt 9 ]; then
+      ensure_slate_colorscheme
+    fi
+  fi
   link_nvim
   if command -v vim >/dev/null 2>&1; then
     link_vim
   fi
 else
   apt_install_or_upgrade vim
+  if [ "$vim_colorscheme" = "slate" ]; then
+    vim_major="$(vim_major_version || true)"
+    if [ -n "$vim_major" ] && [ "$vim_major" -lt 9 ]; then
+      ensure_slate_colorscheme
+    fi
+  fi
   link_vim
   if command -v nvim >/dev/null 2>&1; then
     link_nvim
