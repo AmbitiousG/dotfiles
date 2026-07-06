@@ -233,36 +233,41 @@ append_line_if_missing() {
 ensure_bashrc_block() {
   local file_path="$1"
   local tmp
+  local block_tmp
 
   if [ ! -f "$file_path" ]; then
     : > "$file_path"
   fi
 
-  if grep -Fqx "$bashrc_block_start" "$file_path"; then
-    return
-  fi
-
   tmp="$(mktemp)"
-  cat > "$tmp" <<EOF
+  block_tmp="$(mktemp)"
+  cat > "$block_tmp" <<EOF
 
 $bashrc_block_start
 # sudoedit: safer, uses current user's vim config and falls back when sudoedit
 # refuses files in writable directories.
 se() {
-    local output
-    if output=\$(SUDO_EDITOR=vim sudoedit "\$@" 2>&1); then
+    local stderr_file
+    local status
+
+    stderr_file=\$(mktemp)
+    if SUDO_EDITOR=vim sudoedit "\$@" 2>"\$stderr_file"; then
+        rm -f "\$stderr_file"
         return 0
     fi
+    status=\$?
 
-    if printf '%s\n' "\$output" | grep -Fq 'editing files in a writable directory is not permitted'; then
-        printf '%s\n' "\$output" >&2
+    if grep -Fq 'editing files in a writable directory is not permitted' "\$stderr_file"; then
+        cat "\$stderr_file" >&2
+        rm -f "\$stderr_file"
         echo 'Falling back to sudo vim -u ~/.vimrc for writable-directory path.' >&2
         sudo vim -u "\$HOME/.vimrc" "\$@"
         return \$?
     fi
 
-    printf '%s\n' "\$output" >&2
-    return 1
+    cat "\$stderr_file" >&2
+    rm -f "\$stderr_file"
+    return "\$status"
 }
 
 # sudo vim: useful when sudoedit refuses writable directories.
@@ -271,8 +276,20 @@ svim() {
 }
 $bashrc_block_end
 EOF
-  cat "$tmp" >> "$file_path"
-  rm -f "$tmp"
+  if grep -Fqx "$bashrc_block_start" "$file_path"; then
+    awk -v start="$bashrc_block_start" -v end="$bashrc_block_end" '
+      $0 == start { skipping = 1; next }
+      $0 == end { skipping = 0; next }
+      !skipping { print }
+    ' "$file_path" > "$tmp"
+    cat "$block_tmp" >> "$tmp"
+  else
+    cat "$file_path" > "$tmp"
+    cat "$block_tmp" >> "$tmp"
+  fi
+
+  mv "$tmp" "$file_path"
+  rm -f "$block_tmp"
   bashrc_updated=1
 }
 
