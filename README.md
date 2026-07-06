@@ -54,4 +54,10 @@ git pull
 ./install-debian.sh
 ```
 
-The script backs up existing config files before replacing them with symlinks.
+The script also:
+
+- Installs `~/.vim/colors/slate.vim` when your `.vimrc` uses `colorscheme slate`,
+  which helps older Vim builds that do not ship the newer `slate` variant.
+- Ensures `~/.bashrc` contains `export EDITOR=vim`, `export VISUAL=vim`, and
+  `alias svim='sudoedit'` so sudo-based editing still uses your Vim config.
+- Backs up existing config files before replacing them with symlinks.

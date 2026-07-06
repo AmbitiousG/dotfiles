@@ -18,6 +18,7 @@ EOF
 
 mode="vim"
 raw_base="${DOTFILES_RAW_BASE:-https://raw.githubusercontent.com/AmbitiousG/dotfiles/main}"
+bashrc_path="${HOME}/.bashrc"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -90,6 +91,14 @@ bootstrap_dotfiles() {
   download_file "$raw_base/install-debian.sh" "$destination/install-debian.sh"
   download_file "$raw_base/README.md" "$destination/README.md"
   chmod +x "$destination/install-debian.sh"
+}
+
+extract_vim_colorscheme() {
+  local vimrc_path="$1"
+  local scheme
+
+  scheme="$(sed -n 's/^[[:space:]]*colorscheme[[:space:]]\+\([[:alnum:]_-]\+\)[[:space:]]*$/\1/p' "$vimrc_path" | tail -n 1)"
+  printf '%s\n' "$scheme"
 }
 
 if [ -n "$script_dir" ] && [ -f "$script_dir/.vimrc" ] && [ -f "$script_dir/nvim/init.lua" ]; then
@@ -171,6 +180,48 @@ link_vim() {
 link_nvim() {
   link_config "$nvim_source" "$HOME/.config/nvim/init.lua"
 }
+
+ensure_slate_colorscheme() {
+  local colors_dir
+  local slate_target
+  local slate_url
+
+  colors_dir="$HOME/.vim/colors"
+  slate_target="$colors_dir/slate.vim"
+  slate_url="https://raw.githubusercontent.com/vim/vim/master/runtime/colors/slate.vim"
+
+  mkdir -p "$colors_dir"
+  if [ ! -f "$slate_target" ]; then
+    echo "Installing slate colorscheme compatibility file..."
+    download_file "$slate_url" "$slate_target"
+  fi
+}
+
+append_line_if_missing() {
+  local file_path="$1"
+  local line="$2"
+
+  if [ ! -f "$file_path" ]; then
+    : > "$file_path"
+  fi
+
+  if ! grep -Fqx "$line" "$file_path"; then
+    printf '%s\n' "$line" >> "$file_path"
+  fi
+}
+
+ensure_shell_defaults() {
+  append_line_if_missing "$bashrc_path" 'export EDITOR=vim'
+  append_line_if_missing "$bashrc_path" 'export VISUAL=vim'
+  append_line_if_missing "$bashrc_path" "alias svim='sudoedit'"
+}
+
+vim_colorscheme="$(extract_vim_colorscheme "$vimrc_source")"
+if [ "$vim_colorscheme" = "slate" ]; then
+  ensure_slate_colorscheme
+fi
+
+ensure_shell_defaults
 
 if [ "$mode" = "nvim" ]; then
   apt_install_or_upgrade neovim
