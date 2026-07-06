@@ -32,7 +32,7 @@ vim.opt.splitbelow = true             -- 水平分屏默认开在下面
 vim.cmd("syntax enable")
 vim.cmd("filetype plugin indent on")
 vim.opt.background = "dark"
-vim.cmd("colorscheme desert")
+vim.cmd("colorscheme slate")
 
 -- Leader 键，常用设为空格
 vim.g.mapleader = " "
