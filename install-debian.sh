@@ -251,7 +251,7 @@ se() {
     local status
 
     stderr_file=\$(mktemp)
-    if SUDO_EDITOR=vim sudoedit "\$@" 2>"\$stderr_file"; then
+    if SUDO_EDITOR="vim -u \$HOME/.vimrc" sudoedit "\$@" 2>"\$stderr_file"; then
         rm -f "\$stderr_file"
         return 0
     fi
