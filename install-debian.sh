@@ -20,6 +20,8 @@ mode="vim"
 raw_base="${DOTFILES_RAW_BASE:-https://raw.githubusercontent.com/AmbitiousG/dotfiles/main}"
 bashrc_path="${HOME}/.bashrc"
 bashrc_updated=0
+bashrc_block_start="# dotfiles sudo vim helpers start"
+bashrc_block_end="# dotfiles sudo vim helpers end"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -228,10 +230,56 @@ append_line_if_missing() {
   fi
 }
 
+ensure_bashrc_block() {
+  local file_path="$1"
+  local tmp
+
+  if [ ! -f "$file_path" ]; then
+    : > "$file_path"
+  fi
+
+  if grep -Fqx "$bashrc_block_start" "$file_path"; then
+    return
+  fi
+
+  tmp="$(mktemp)"
+  cat > "$tmp" <<EOF
+
+$bashrc_block_start
+# sudoedit: safer, uses current user's vim config and falls back when sudoedit
+# refuses files in writable directories.
+se() {
+    local output
+    if output=\$(SUDO_EDITOR=vim sudoedit "\$@" 2>&1); then
+        return 0
+    fi
+
+    if printf '%s\n' "\$output" | grep -Fq 'editing files in a writable directory is not permitted'; then
+        printf '%s\n' "\$output" >&2
+        echo 'Falling back to sudo vim -u ~/.vimrc for writable-directory path.' >&2
+        sudo vim -u "\$HOME/.vimrc" "\$@"
+        return \$?
+    fi
+
+    printf '%s\n' "\$output" >&2
+    return 1
+}
+
+# sudo vim: useful when sudoedit refuses writable directories.
+svim() {
+    sudo vim -u "\$HOME/.vimrc" "\$@"
+}
+$bashrc_block_end
+EOF
+  cat "$tmp" >> "$file_path"
+  rm -f "$tmp"
+  bashrc_updated=1
+}
+
 ensure_shell_defaults() {
   append_line_if_missing "$bashrc_path" 'export EDITOR=vim'
   append_line_if_missing "$bashrc_path" 'export VISUAL=vim'
-  append_line_if_missing "$bashrc_path" "alias svim='sudoedit'"
+  ensure_bashrc_block "$bashrc_path"
 }
 
 vim_colorscheme="$(extract_vim_colorscheme "$vimrc_source")"
