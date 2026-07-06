@@ -19,6 +19,7 @@ EOF
 mode="vim"
 raw_base="${DOTFILES_RAW_BASE:-https://raw.githubusercontent.com/AmbitiousG/dotfiles/main}"
 bashrc_path="${HOME}/.bashrc"
+bashrc_updated=0
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -223,6 +224,7 @@ append_line_if_missing() {
 
   if ! grep -Fqx "$line" "$file_path"; then
     printf '%s\n' "$line" >> "$file_path"
+    bashrc_updated=1
   fi
 }
 
@@ -262,3 +264,6 @@ else
 fi
 
 echo "Done."
+if [ "$bashrc_updated" -eq 1 ]; then
+  echo "Run 'source ~/.bashrc' or open a new shell to pick up EDITOR, VISUAL, and svim."
+fi
