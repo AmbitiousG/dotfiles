@@ -40,7 +40,7 @@ set splitbelow
 syntax enable
 filetype plugin indent on
 set background=dark
-colorscheme desert
+colorscheme torte
 
 " Leader key
 let mapleader = " "
