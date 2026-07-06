@@ -57,7 +57,8 @@ git pull
 The script also:
 
 - Installs `~/.vim/colors/slate.vim` when your `.vimrc` uses `colorscheme slate`,
-  which helps older Vim builds that do not ship the newer `slate` variant.
+  overriding the built-in older Vim copy so Vim 8 can use the newer `slate`
+  variant too.
 - Ensures `~/.bashrc` contains `export EDITOR=vim`, `export VISUAL=vim`, and
   `alias svim='sudoedit'` so sudo-based editing still uses your Vim config.
 - Backs up existing config files before replacing them with symlinks.

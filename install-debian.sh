@@ -191,10 +191,8 @@ ensure_slate_colorscheme() {
   slate_url="https://raw.githubusercontent.com/vim/vim/master/runtime/colors/slate.vim"
 
   mkdir -p "$colors_dir"
-  if [ ! -f "$slate_target" ]; then
-    echo "Installing slate colorscheme compatibility file..."
-    download_file "$slate_url" "$slate_target"
-  fi
+  echo "Installing slate colorscheme compatibility file..."
+  download_file "$slate_url" "$slate_target"
 }
 
 append_line_if_missing() {
