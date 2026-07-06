@@ -250,13 +250,12 @@ se() {
     local stderr_file
     local status
     local editor_wrapper
+    local vimrc_path
 
+    vimrc_path="\${DOTFILES_VIMRC:-\$HOME/.vimrc}"
     stderr_file=\$(mktemp)
     editor_wrapper=\$(mktemp)
-    cat > "\$editor_wrapper" <<'WRAPPER'
-#!/usr/bin/env bash
-exec vim -u "$HOME/.vimrc" "$@"
-WRAPPER
+    printf '#!/usr/bin/env bash\nexec vim -u %q "\$@"\n' "\$vimrc_path" > "\$editor_wrapper"
     chmod +x "\$editor_wrapper"
 
     if SUDO_EDITOR="\$editor_wrapper" sudoedit "\$@" 2>"\$stderr_file"; then
@@ -269,7 +268,7 @@ WRAPPER
     if grep -Fq 'editing files in a writable directory is not permitted' "\$stderr_file"; then
         rm -f "\$stderr_file"
         echo 'Falling back to sudo vim -u ~/.vimrc for writable-directory path.' >&2
-        sudo vim -u "\$HOME/.vimrc" "\$@"
+        sudo vim -u "\$vimrc_path" "\$@"
         return \$?
     fi
 
@@ -280,7 +279,10 @@ WRAPPER
 
 # sudo vim: useful when sudoedit refuses writable directories.
 svim() {
-    sudo vim -u "\$HOME/.vimrc" "\$@"
+    local vimrc_path
+
+    vimrc_path="\${DOTFILES_VIMRC:-\$HOME/.vimrc}"
+    sudo vim -u "\$vimrc_path" "\$@"
 }
 $bashrc_block_end
 EOF
