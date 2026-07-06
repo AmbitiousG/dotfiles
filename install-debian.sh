@@ -249,16 +249,24 @@ $bashrc_block_start
 se() {
     local stderr_file
     local status
+    local editor_wrapper
 
     stderr_file=\$(mktemp)
-    if SUDO_EDITOR="vim -u \$HOME/.vimrc" sudoedit "\$@" 2>"\$stderr_file"; then
-        rm -f "\$stderr_file"
+    editor_wrapper=\$(mktemp)
+    cat > "\$editor_wrapper" <<'WRAPPER'
+#!/usr/bin/env bash
+exec vim -u "$HOME/.vimrc" "$@"
+WRAPPER
+    chmod +x "\$editor_wrapper"
+
+    if SUDO_EDITOR="\$editor_wrapper" sudoedit "\$@" 2>"\$stderr_file"; then
+        rm -f "\$stderr_file" "\$editor_wrapper"
         return 0
     fi
     status=\$?
+    rm -f "\$editor_wrapper"
 
     if grep -Fq 'editing files in a writable directory is not permitted' "\$stderr_file"; then
-        cat "\$stderr_file" >&2
         rm -f "\$stderr_file"
         echo 'Falling back to sudo vim -u ~/.vimrc for writable-directory path.' >&2
         sudo vim -u "\$HOME/.vimrc" "\$@"
