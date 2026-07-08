@@ -13,6 +13,7 @@ set scrolloff=8
 set mouse=a
 set splitright
 set splitbelow
+set cursorline
 
 if has("persistent_undo")
   set undofile
@@ -26,6 +27,9 @@ endif
 if has("termguicolors")
   set termguicolors
 endif
+
+set background=dark
+colorscheme slate
 
 syntax enable
 filetype plugin indent on
