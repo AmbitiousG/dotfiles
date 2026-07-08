@@ -29,9 +29,15 @@ if has("termguicolors") && ($COLORTERM ==# "truecolor" || $COLORTERM ==# "24bit"
 endif
 
 if &term =~# 'xterm\|screen\|tmux'
-  let &t_SI = "\<Esc>[6 q"
-  let &t_SR = "\<Esc>[4 q"
-  let &t_EI = "\<Esc>[2 q"
+  let s:cursor_block = "\<Esc>[2 q"
+  let s:cursor_bar = "\<Esc>[5 q"
+  let s:cursor_underline = "\<Esc>[3 q"
+
+  let &t_ti .= s:cursor_block
+  let &t_SI = s:cursor_bar
+  let &t_SR = s:cursor_underline
+  let &t_EI = s:cursor_block
+  let &t_te .= s:cursor_bar
 endif
 
 set background=dark
