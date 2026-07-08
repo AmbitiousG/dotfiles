@@ -28,6 +28,12 @@ if has("termguicolors") && ($COLORTERM ==# "truecolor" || $COLORTERM ==# "24bit"
   set termguicolors
 endif
 
+if &term =~# 'xterm\|screen\|tmux'
+  let &t_SI = "\<Esc>[6 q"
+  let &t_SR = "\<Esc>[4 q"
+  let &t_EI = "\<Esc>[2 q"
+endif
+
 set background=dark
 colorscheme slate
 
