@@ -1,5 +1,0 @@
-*.sh text eol=lf
-*.vim text eol=lf
-.vimrc text eol=lf
-*.lua text eol=lf
-*.md text eol=lf
