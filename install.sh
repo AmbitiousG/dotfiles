@@ -96,19 +96,6 @@ install_packages() {
   done
 }
 
-link_dotfiles_dir() {
-  if [ "$DOTFILES_DIR" = "$HOME/.dotfiles" ]; then
-    return
-  fi
-
-  if [ -e "$HOME/.dotfiles" ] && [ ! -L "$HOME/.dotfiles" ]; then
-    echo "==> $HOME/.dotfiles exists and is not a symlink; leaving it unchanged"
-    return
-  fi
-
-  ln -sfn "$DOTFILES_DIR" "$HOME/.dotfiles"
-}
-
 run_stow() {
   if ! command -v stow >/dev/null 2>&1; then
     echo "error: stow is not installed" >&2
@@ -153,7 +140,6 @@ if [ "$INSTALL_PACKAGES" -eq 1 ]; then
   install_packages
 fi
 
-link_dotfiles_dir
 run_stow
 change_shell
 
