@@ -1,0 +1,4 @@
+gui:
+  showFileTree: true
+git:
+  autoFetch: true
