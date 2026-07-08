@@ -77,24 +77,11 @@ install_packages() {
     zsh-autosuggestions
     zsh-syntax-highlighting
   )
-  local optional_packages=(
-    lazygit
-  )
-
   echo "==> Installing base packages"
   run_as_root apt-get update
   run_as_root apt-get install -y "${base_packages[@]}"
 
   install_starship
-
-  for package in "${optional_packages[@]}"; do
-    if apt-cache show "$package" >/dev/null 2>&1; then
-      echo "==> Installing optional package: $package"
-      run_as_root apt-get install -y "$package"
-    else
-      echo "==> Optional package not available in apt: $package"
-    fi
-  done
 }
 
 install_starship() {
@@ -131,7 +118,6 @@ run_stow() {
     tmux
     starship
     git
-    lazygit
   )
 
   echo "==> Linking dotfiles with stow"
@@ -151,11 +137,32 @@ change_shell() {
   local zsh_path
   zsh_path="$(command -v zsh)"
 
-  if ! grep -qxF "$zsh_path" /etc/shells; then
-    printf "%s\n" "$zsh_path" | run_as_root tee -a /etc/shells >/dev/null
+  if [ "$(id -u)" -eq 0 ]; then
+    if ! grep -qxF "$zsh_path" /etc/shells; then
+      printf "%s\n" "$zsh_path" >>/etc/shells
+    fi
+
+    chsh -s "$zsh_path"
+    return
   fi
 
-  chsh -s "$zsh_path"
+  if command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1; then
+    local target_user
+    target_user="${SUDO_USER:-${USER:-}}"
+    if [ -z "$target_user" ]; then
+      target_user="$(id -un)"
+    fi
+
+    if ! grep -qxF "$zsh_path" /etc/shells; then
+      printf "%s\n" "$zsh_path" | sudo -n tee -a /etc/shells >/dev/null
+    fi
+
+    sudo -n usermod -s "$zsh_path" "$target_user"
+    return
+  fi
+
+  echo "warning: --chsh requires root or passwordless sudo; skipping login shell change" >&2
+  echo "         run later as root: usermod -s \"$zsh_path\" \"${USER:-$(id -un)}\"" >&2
 }
 
 print_component_status() {
@@ -207,5 +214,5 @@ cat <<EOF
 Dotfiles linked from: $DOTFILES_DIR
 
 If you did not pass --chsh, change your shell later with:
-  chsh -s "\$(command -v zsh)"
+  sudo usermod -s "\$(command -v zsh)" "\$USER"
 EOF

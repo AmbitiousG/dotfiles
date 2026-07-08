@@ -9,7 +9,6 @@ Lightweight Debian VPS dotfiles managed with GNU Stow.
 - `tmux` for persistent SSH sessions
 - `starship` prompt config
 - `git` defaults
-- `lazygit` config
 
 System-level VPS hardening stays outside this repo. Use cloud-init or Ansible for SSH, firewall, fail2ban, Docker, systemd services, users, and sudo policy.
 
@@ -22,7 +21,6 @@ Each top-level tool directory is a Stow package:
 - `tmux/.tmux.conf` -> `~/.tmux.conf`
 - `starship/.config/starship.toml` -> `~/.config/starship.toml`
 - `git/.config/git/config` -> `~/.config/git/config`
-- `lazygit/.config/lazygit/config.yml` -> `~/.config/lazygit/config.yml`
 
 ## First use on Debian
 
@@ -51,7 +49,13 @@ To also change your login shell to zsh:
 ./install.sh --chsh
 ```
 
-`--chsh` only changes the login shell. The zsh prompt, fzf integration, autosuggestions, syntax highlighting, and aliases are loaded by the linked `~/.zshrc` when their commands or package files are available.
+`--chsh` only changes the login shell. It runs directly as root, or uses passwordless `sudo usermod` for non-root users. If passwordless sudo is not available, it prints a warning and skips the shell change instead of prompting for a password. The zsh prompt, fzf integration, autosuggestions, syntax highlighting, and aliases are loaded by the linked `~/.zshrc` when their commands or package files are available.
+
+To change the login shell later:
+
+```sh
+sudo usermod -s "$(command -v zsh)" "$USER"
+```
 
 If packages are already installed and you only want to relink dotfiles:
 
