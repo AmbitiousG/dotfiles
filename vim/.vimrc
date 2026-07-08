@@ -24,7 +24,7 @@ if has("persistent_undo")
   execute "set undodir=" . fnameescape(s:undo_dir)
 endif
 
-if has("termguicolors")
+if has("termguicolors") && ($COLORTERM ==# "truecolor" || $COLORTERM ==# "24bit")
   set termguicolors
 endif
 
