@@ -33,13 +33,15 @@ cd dotfiles
 ./install.sh
 ```
 
-`install.sh` installs common Debian packages with apt when available, links this repo to `~/.dotfiles`, and runs Stow for every package.
+`install.sh` installs common Debian packages with apt when available, installs Starship from apt or the official installer when apt does not provide it, links this repo to `~/.dotfiles`, and runs Stow for every package.
 
 To also change your login shell to zsh:
 
 ```sh
 ./install.sh --chsh
 ```
+
+`--chsh` only changes the login shell. The zsh prompt, fzf integration, autosuggestions, syntax highlighting, and aliases are loaded by the linked `~/.zshrc` when their commands or package files are available.
 
 If packages are already installed and you only want to relink dotfiles:
 

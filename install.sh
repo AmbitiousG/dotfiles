@@ -78,13 +78,14 @@ install_packages() {
     zsh-syntax-highlighting
   )
   local optional_packages=(
-    starship
     lazygit
   )
 
   echo "==> Installing base packages"
   run_as_root apt-get update
   run_as_root apt-get install -y "${base_packages[@]}"
+
+  install_starship
 
   for package in "${optional_packages[@]}"; do
     if apt-cache show "$package" >/dev/null 2>&1; then
@@ -94,6 +95,27 @@ install_packages() {
       echo "==> Optional package not available in apt: $package"
     fi
   done
+}
+
+install_starship() {
+  if command -v starship >/dev/null 2>&1; then
+    echo "==> starship already installed"
+    return
+  fi
+
+  if apt-cache show starship >/dev/null 2>&1; then
+    echo "==> Installing starship from apt"
+    run_as_root apt-get install -y starship
+    return
+  fi
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "error: curl is required to install starship" >&2
+    exit 1
+  fi
+
+  echo "==> Installing starship with official installer"
+  curl -fsSL https://starship.rs/install.sh | run_as_root sh -s -- -y
 }
 
 run_stow() {
@@ -136,12 +158,48 @@ change_shell() {
   chsh -s "$zsh_path"
 }
 
+print_component_status() {
+  echo
+  echo "==> Component status"
+
+  if command -v zsh >/dev/null 2>&1; then
+    echo "zsh: ok ($(command -v zsh))"
+  else
+    echo "zsh: missing"
+  fi
+
+  if command -v starship >/dev/null 2>&1; then
+    echo "starship: ok ($(command -v starship))"
+  else
+    echo "starship: missing"
+  fi
+
+  if command -v fzf >/dev/null 2>&1; then
+    echo "fzf: ok ($(command -v fzf))"
+  else
+    echo "fzf: missing"
+  fi
+
+  if [ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
+    echo "zsh-autosuggestions: ok"
+  else
+    echo "zsh-autosuggestions: missing"
+  fi
+
+  if [ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
+    echo "zsh-syntax-highlighting: ok"
+  else
+    echo "zsh-syntax-highlighting: missing"
+  fi
+}
+
 if [ "$INSTALL_PACKAGES" -eq 1 ]; then
   install_packages
 fi
 
 run_stow
 change_shell
+print_component_status
 
 cat <<EOF
 ==> Done
