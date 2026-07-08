@@ -26,7 +26,17 @@ Each top-level tool directory is a Stow package:
 
 ## First use on Debian
 
-Clone the repo, then run:
+On a fresh Debian VPS, install the minimal bootstrap tools first:
+
+```sh
+apt-get update
+apt-get install -y ca-certificates curl git
+git clone https://github.com/AmbitiousG/.dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+./install.sh
+```
+
+If `git` is already available, clone the repo, then run:
 
 ```sh
 cd dotfiles
