@@ -9,6 +9,8 @@ set number
 set relativenumber
 set ignorecase
 set smartcase
+set hlsearch
+set incsearch
 set scrolloff=8
 set mouse=a
 set splitright
